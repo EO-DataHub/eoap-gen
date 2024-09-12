@@ -1,0 +1,11 @@
+FROM python:3-slim
+
+WORKDIR /app
+
+{% if (requirements is defined) and requirements %}
+RUN pip install {{ requirements|join(" ") }}
+{% endif %}
+
+COPY {{ script_name }} app.py
+
+CMD ["python"]

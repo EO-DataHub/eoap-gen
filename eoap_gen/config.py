@@ -18,18 +18,18 @@ class WorkflowInputConfig:
     label: str
     doc: str
     type_: str
-    default: str
+    default: str | None
 
     def __init__(
         self,
         id_: str,
-        type_: str = "string",
+        type_: str | None = None,
         label: str | None = None,
         doc: str | None = None,
         default: str | None = None,
     ) -> None:
         self.id_ = id_
-        self.type_ = type_
+        self.type_ = type_ or "string"
         self.label = label or doc or id_
         self.doc = doc or label or id_
         self.default = default
@@ -63,10 +63,10 @@ class WorkflowOutputConfig:
         self,
         id_: str,
         source: str | list[str],
-        type_: str = "Directory",
+        type_: str | None = None,
     ) -> None:
         self.id_ = id_
-        self.type_ = type_
+        self.type_ = type_ or "Directory"
         if isinstance(source, list):
             self.source = source
         else:
@@ -152,10 +152,12 @@ class StepConfig:
     @staticmethod
     def from_dict(d: dict[str, Any]):
         inputs_raw = d.get("inputs")
+        inputs = []
         if inputs_raw:
             inputs = [StepInputConfig.from_dict(inp) for inp in inputs_raw]
 
         outputs_raw = d.get("outputs")
+        outputs = []
         if outputs_raw:
             outputs = [StepOutputConfig.from_dict(out) for out in outputs_raw]
 
@@ -163,8 +165,8 @@ class StepConfig:
             id_=d["id"],
             script=d["script"],
             requirements=d["requirements"],
-            inputs=inputs or [],
-            outputs=outputs or [],
+            inputs=inputs,
+            outputs=outputs,
         )
 
     def to_cwl(self):
@@ -203,6 +205,7 @@ class WorkflowConfig:
     @staticmethod
     def from_dict(d: dict[str, Any]):
         inputs_raw = d.get("inputs")
+        inputs = []
         if inputs_raw:
             inputs = [WorkflowInputConfig.from_dict(inp) for inp in inputs_raw]
 
@@ -214,7 +217,7 @@ class WorkflowConfig:
             id_=d["id"],
             doc=d.get("doc"),
             label=d.get("label"),
-            inputs=inputs or [],
+            inputs=inputs,
             outputs=outputs,
             steps=steps,
         )

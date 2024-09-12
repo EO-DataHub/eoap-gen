@@ -1,8 +1,7 @@
 import json
-import os
 import shutil
 import subprocess
-from pathlib import Path, PurePath
+from pathlib import Path
 
 from cwl_utils.parser import CommandLineTool, load_document_by_uri, save
 from cwl_utils.parser.cwl_v1_0 import DockerRequirement

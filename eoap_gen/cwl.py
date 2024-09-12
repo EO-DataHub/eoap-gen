@@ -7,6 +7,7 @@ from cwl_utils.parser import CommandLineTool, load_document_by_uri, save
 from cwl_utils.parser.cwl_v1_0 import DockerRequirement
 from ruamel.yaml import YAML
 
+from eoap_gen.config import StepOutputConfig, WorkflowConfig
 from eoap_gen.template import get_template
 
 yaml = YAML()
@@ -15,7 +16,7 @@ yaml.default_flow_style = False
 
 def generate_cwl_cli(
     script_path: os.PathLike,
-    output_dir: str = "gen-output",
+    output_dir: str | os.PathLike,
     venv: str | None = None,
     requirements: list[str] = [],
     cwl_outputs_path: os.PathLike | None = None,
@@ -38,8 +39,16 @@ def generate_cwl_cli(
         raise RuntimeError("Failed generating cwl CommandLineTool.")
 
 
+def write_cwl_cli_outputs(path: Path, outputs: list[StepOutputConfig]):
+    raw = {"outputs": {}}
+    for o in outputs:
+        raw["outputs"][o.id_] = o.params
+    with open(path, "w") as f:
+        yaml.dump(raw, f)
+
+
 def modify_cwl_cli(cwl_path: os.PathLike, docker_url: str):
-    tool_obj: CommandLineTool = load_document_by_uri(cwl_path)
+    tool_obj: CommandLineTool = load_document_by_uri(Path(cwl_path))
 
     tool_obj.hints = [DockerRequirement(dockerPull=docker_url)]
     tool_obj.baseCommand = ["python", "/app/app.py"]
@@ -48,6 +57,12 @@ def modify_cwl_cli(cwl_path: os.PathLike, docker_url: str):
 
     with open(cwl_path, "w") as f:
         yaml.dump(tool_dict, f)
+
+
+def generate_workflow(config: WorkflowConfig, wf_path: os.PathLike):
+    wf = config.to_cwl()
+    with open(Path(wf_path).resolve(), "w") as f:
+        yaml.dump(save(wf, relative_uris=False), f)
 
 
 def pack_workflow(wf_path: os.PathLike):

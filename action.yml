@@ -13,6 +13,9 @@ runs:
       with:
         python-version: "3.11"
 
+    - shell: bash
+      run: python -m pip install pipx
+
     - name: Generate EOAP
       shell: bash
       run: python -m pipx run --spec git+https://github.com/EO-DataHub/eoap-gen.git eoap-gen --help

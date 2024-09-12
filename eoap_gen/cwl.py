@@ -31,7 +31,11 @@ def generate_cwl_cli(
         script_path=Path(script_path).resolve(),
         cwl_outputs_path=Path(cwl_outputs_path).resolve() if cwl_outputs_path else None,
     )
-    subprocess.run(cmd, shell=True, executable="/bin/bash")
+    res = subprocess.run(cmd, shell=True, executable="/bin/bash", capture_output=True)
+    if res.returncode != 0:
+        print("Command stdout: ", res.stdout)
+        print("Command stderr: ", res.stderr)
+        raise RuntimeError("Failed generating cwl CommandLineTool.")
 
 
 def modify_cwl_cli(cwl_path: os.PathLike, docker_url: str):
@@ -51,3 +55,12 @@ def modify_cwl_cli(cwl_path: os.PathLike, docker_url: str):
 
     with open(cwl_path, "w") as f:
         yaml.dump(tool_dict, f)
+
+def validate_workflow(wf_path: os.PathLike) -> bool:
+    abs_path = Path(wf_path).resolve()
+    res = subprocess.run(
+        f"cwltool --validate {abs_path}",
+        shell=True,
+        executable="/bin/bash",
+    )
+    return res.returncode == 0

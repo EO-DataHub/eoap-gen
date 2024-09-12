@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "eoap-gen"
+version = "0.1.0"
+description = ""
+authors = ["Dusan Figala <dusan@oxidian.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.11.*"
+click = "^8.1.7"
+argparse2tool = "^0.4.9"
+cwl-utils = "^0.33"
+pyyaml = "^6.0.2"
+
+[tool.poetry.scripts]
+eoap-gen = "eoap_gen.cli:cli"
+
+[tool.poetry.group.dev.dependencies]
+black = "^24.8.0"
+flake8 = "^7.1.1"
+isort = "^5.13.2"
+pyright = "^1.1.377"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.isort]
+profile = "black"
+
+[tool.pyright]
+include = ["eoap_gen"]

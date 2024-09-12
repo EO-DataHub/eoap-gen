@@ -1,0 +1,12 @@
+set -e
+
+mkdir {{ output_dir }} 
+cd {{ output_dir }}
+
+python -m venv {{ venv }}
+
+. {{ venv }}/bin/activate
+
+pip install argparse2tool {% if (requirements is defined) and requirements %} {{ requirements|join(" ") }} {% endif %}
+
+PYTHONPATH=$(argparse2tool) python {{ script_path }} --generate_cwl_tool {% if (cwl_outputs_path is defined) and cwl_outputs_path %} --output_section {{ cwl_outputs_path }} {% endif %}

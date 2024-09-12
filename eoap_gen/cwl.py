@@ -1,5 +1,5 @@
+import json
 import os
-from pathlib import PurePath, Path
 import subprocess
 from pathlib import Path, PurePath
 
@@ -9,6 +9,9 @@ from ruamel.yaml import YAML
 
 from eoap_gen.template import get_template
 
+yaml = YAML()
+yaml.default_flow_style = False
+
 
 def generate_cwl_cli(
     script_path: os.PathLike,
@@ -17,9 +20,6 @@ def generate_cwl_cli(
     requirements: list[str] = [],
     cwl_outputs_path: os.PathLike | None = None,
 ):
-    if not script_path:
-        raise ValueError("Invalid script path.")
-
     script_name = PurePath(script_path).stem
     if not venv:
         venv = f"{script_name}-venv"
@@ -39,22 +39,30 @@ def generate_cwl_cli(
 
 
 def modify_cwl_cli(cwl_path: os.PathLike, docker_url: str):
-    if not cwl_path:
-        raise ValueError("Invalid path to cwl file.")
-    if not docker_url:
-        raise ValueError("Invalid docker image url.")
-
     tool_obj: CommandLineTool = load_document_by_uri(cwl_path)
 
     tool_obj.hints = [DockerRequirement(dockerPull=docker_url)]
     tool_obj.baseCommand = ["python", "/app/app.py"]
 
     tool_dict = save(tool_obj)
-    yaml = YAML()
-    yaml.default_flow_style = False
 
     with open(cwl_path, "w") as f:
         yaml.dump(tool_dict, f)
+
+
+def pack_workflow(wf_path: os.PathLike):
+    wf_abs_path = Path(wf_path).resolve()
+    pack_res = subprocess.run(
+        f"cwltool --pack {wf_abs_path}",
+        shell=True,
+        executable="/bin/bash",
+        check=True,
+        capture_output=True,
+    )
+    packed_obj = json.loads(pack_res.stdout)
+    with open(wf_abs_path.with_stem(f"{wf_abs_path.stem}-packed"), "w") as f:
+        yaml.dump(packed_obj, f)
+
 
 def validate_workflow(wf_path: os.PathLike) -> bool:
     abs_path = Path(wf_path).resolve()

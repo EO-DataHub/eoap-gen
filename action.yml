@@ -1,0 +1,18 @@
+name: eoap-gen
+description: |
+  A Github action to generate Earth Observation Application Package
+inputs:
+  config:
+    description: Path to generator configuration file.
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Setup python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Generate EOAP
+      shell: bash
+      run: python -m pipx run --spec git+https://github.com/EO-DataHub/eoap-gen.git eoap-gen --help

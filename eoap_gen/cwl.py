@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import subprocess
 from pathlib import Path, PurePath
 
@@ -15,22 +16,21 @@ yaml.default_flow_style = False
 
 
 def generate_cwl_cli(
-    script_path: os.PathLike,
-    output_dir: str | os.PathLike,
+    script_path: Path,
+    output_dir: Path,
     venv: str | None = None,
     requirements: list[str] = [],
-    cwl_outputs_path: os.PathLike | None = None,
+    cwl_outputs_path: Path | None = None,
 ):
-    script_name = PurePath(script_path).stem
     if not venv:
-        venv = f"{script_name}-venv"
-
+        venv = f"{script_path.stem}-venv"
+    new_script_path = shutil.copy2(script_path, output_dir)
     cmd = get_template("cwltool.jinja").render(
-        output_dir=Path(output_dir).resolve(),
+        output_dir=output_dir.resolve(),
         venv=venv,
         requirements=requirements,
-        script_path=Path(script_path).resolve(),
-        cwl_outputs_path=Path(cwl_outputs_path).resolve() if cwl_outputs_path else None,
+        script_path=Path(new_script_path).resolve(),
+        cwl_outputs_path=cwl_outputs_path.resolve() if cwl_outputs_path else None,
     )
     res = subprocess.run(cmd, shell=True, executable="/bin/bash", capture_output=True)
     if res.returncode != 0:
@@ -47,8 +47,8 @@ def write_cwl_cli_outputs(path: Path, outputs: list[StepOutputConfig]):
         yaml.dump(raw, f)
 
 
-def modify_cwl_cli(cwl_path: os.PathLike, docker_url: str):
-    tool_obj: CommandLineTool = load_document_by_uri(Path(cwl_path))
+def modify_cwl_cli(cwl_path: Path, docker_url: str):
+    tool_obj: CommandLineTool = load_document_by_uri(cwl_path)
 
     tool_obj.hints = [DockerRequirement(dockerPull=docker_url)]
     tool_obj.baseCommand = ["python", "/app/app.py"]
@@ -59,14 +59,14 @@ def modify_cwl_cli(cwl_path: os.PathLike, docker_url: str):
         yaml.dump(tool_dict, f)
 
 
-def generate_workflow(config: WorkflowConfig, wf_path: os.PathLike):
+def generate_workflow(config: WorkflowConfig, wf_path: Path):
     wf = config.to_cwl()
-    with open(Path(wf_path).resolve(), "w") as f:
+    with open(wf_path.resolve(), "w") as f:
         yaml.dump(save(wf, relative_uris=False), f)
 
 
-def pack_workflow(wf_path: os.PathLike):
-    wf_abs_path = Path(wf_path).resolve()
+def pack_workflow(wf_path: Path):
+    wf_abs_path = wf_path.resolve()
     pack_res = subprocess.run(
         f"cwltool --pack {wf_abs_path}",
         shell=True,
@@ -79,8 +79,8 @@ def pack_workflow(wf_path: os.PathLike):
         yaml.dump(packed_obj, f)
 
 
-def validate_workflow(wf_path: os.PathLike) -> bool:
-    abs_path = Path(wf_path).resolve()
+def validate_workflow(wf_path: Path) -> bool:
+    abs_path = wf_path.resolve()
     res = subprocess.run(
         f"cwltool --validate {abs_path}",
         shell=True,

@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import click
@@ -33,8 +34,25 @@ def cli():
     type=click.Path(path_type=Path),
     required=True,
 )
-@click.option("--docker-url-base", required=True)
-def generate(config_path: Path, output_path: Path, docker_url_base: str):
+@click.option(
+    "--docker-url-base",
+    required=True,
+    help=(
+        "Base of the docker registry url, e.g. ghcr.io/owner/repo. In combination with "
+        "--docker-tag constructs full Docker pull url."
+    ),
+)
+@click.option(
+    "--docker-tag",
+    required=True,
+    help=(
+        "Docker image tag, to be used by CWL to pull generated CommandLineTools, e.g. "
+        "`main`"
+    ),
+)
+def generate(
+    config_path: Path, output_path: Path, docker_url_base: str, docker_tag: str
+):
     config = WorkflowConfig.load_config(config_path)
 
     create_output_dirs(output_path, [s.id_ for s in config.steps])
@@ -48,7 +66,8 @@ def generate(config_path: Path, output_path: Path, docker_url_base: str):
             requirements=get_requirements(s.requirements),
             cwl_outputs_path=step_output_dir / "tool_out.yml",
         )
-        modify_cwl_cli(step_output_dir / f"{s.script.stem}.cwl", docker_url_base)
+        full_docker_url = os.path.join(docker_url_base, f"{s.script.stem}:{docker_tag}")
+        modify_cwl_cli(step_output_dir / f"{s.script.stem}.cwl", full_docker_url)
 
     config.set_step_run(output_path / "cli")
     wf_path = output_path / "cli" / "workflow.cwl"

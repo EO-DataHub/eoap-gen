@@ -75,7 +75,7 @@ def pack_workflow(wf_path: Path):
     if pack_res.returncode != 0:
         print("Command stdout: ", pack_res.stdout)
         print("Command stderr: ", pack_res.stderr)
-        raise RuntimeError("Failed generating cwl CommandLineTool.")
+        raise RuntimeError("Failed packing workflow.")
     packed_obj = json.loads(pack_res.stdout)
     with open(wf_abs_path.with_stem(f"{wf_abs_path.stem}-packed"), "w") as f:
         yaml.dump(packed_obj, f)

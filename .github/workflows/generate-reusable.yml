@@ -97,6 +97,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: ${{ inputs.output }}/cli/${{ matrix.cli }}
+          file: ${{ inputs.output }}/cli/${{ matrix.cli }}/${{ matrix.cli }}.Dockerfile
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}

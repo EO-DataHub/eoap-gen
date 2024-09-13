@@ -13,7 +13,7 @@ from eoap_gen.cwl import (
     write_cwl_cli_outputs,
 )
 from eoap_gen.dockerfile import generate_dockerfile, get_requirements
-from eoap_gen.utils import create_output_dirs
+from eoap_gen.utils import create_output_dirs, write_action_output
 
 
 @click.group()
@@ -74,3 +74,4 @@ def generate(
     generate_workflow(config, wf_path)
     pack_workflow(wf_path)
     validate_workflow(wf_path)
+    write_action_output(config)

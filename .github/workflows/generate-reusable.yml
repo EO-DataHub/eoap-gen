@@ -1,0 +1,103 @@
+name: Generate EOAP (reusable)
+
+on:
+  workflow_call:
+    inputs:
+      config:
+        description: Path to generator configuration file.
+        required: true
+        type: string
+      output:
+        description: Action will generate files at this path
+        default: eoap-gen-out
+        type: string
+      docker_url_base:
+        description: >
+          Base of the docker registry url, e.g. ghcr.io/owner/repo. 
+          In combination with `docker_tag` constructs full Docker pull url
+        default: ghcr.io/${{ github.repository }}
+        type: string
+      docker_tag:
+        description: >
+          Docker image tag, to be used by CWL to pull generated CommandLineTools, e.g. main`.
+        default: ${{ github.ref_name }}
+        type: string
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    outputs:
+      tools: ${{ steps.gen.outputs.tools }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Run eoap-gen
+        id: gen
+        uses: EO-DataHub/eoap-gen@main
+        with:
+          config: ${{ inputs.config }}
+          output: ${{ inputs.output }}
+          docker_url_base: ${{ inputs.docker_url_base }}
+          docker_tag: ${{ inputs.docker_tag }}
+
+      - name: Check Git status
+        id: git_status
+        run: |
+          GIT_STATUS_OUTPUT=$(git status --porcelain)
+          if [[ -n "$GIT_STATUS_OUTPUT" ]]; then
+            echo "GIT_STATUS_MODIFIED=true" >> $GITHUB_ENV
+          else
+            echo "GIT_STATUS_MODIFIED=false" >> $GITHUB_ENV
+          fi
+
+      - name: Push changes
+        if: ${{ env.GIT_STATUS_MODIFIED == 'true' }}
+        run: |
+          git add ${{ inputs.output }}/*
+          git commit --no-verify -m "Generate EOAP"
+          git push origin ${{ github.head_ref || github.ref }}
+
+  build-push:
+    runs-on: ubuntu-latest
+    needs: [generate]
+    strategy:
+      matrix:
+        cli: ${{ fromJson(needs.generate.outputs.tools) }}
+    permissions:
+      contents: read
+      packages: write
+      attestations: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Log in to ghcr
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Get image metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/${{ matrix.cli }}
+
+      - name: Build and push image
+        id: push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ inputs.output }}/${{ matrix.cli }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ghcr.io/${{ github.repository }}/${{ matrix.cli }}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true

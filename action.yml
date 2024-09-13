@@ -5,6 +5,22 @@ inputs:
   config:
     description: Path to generator configuration file.
     required: true
+  output:
+    description: Action will generate files at this path
+    default: eoap-gen-out
+  github_token:
+    description: Github PAT
+    default: ${{ github.token }}
+    required: false
+  docker_url_base:
+    description: >
+      Base of the docker registry url, e.g. ghcr.io/owner/repo. 
+      In combination with `docker_tag` constructs full Docker pull url
+    default: ghcr.io/${{ github.repository }}
+  docker_tag:
+    description: >
+      Docker image tag, to be used by CWL to pull generated CommandLineTools, e.g. main`.
+    default: ${{ github.ref_name }}
 runs:
   using: composite
   steps:
@@ -13,9 +29,21 @@ runs:
       with:
         python-version: "3.11"
 
-    - shell: bash
+    - name: Install pipx
+      shell: bash
       run: python -m pip install pipx
 
     - name: Generate EOAP
       shell: bash
-      run: python -m pipx run --spec git+https://github.com/EO-DataHub/eoap-gen.git eoap-gen --help
+      id: gen
+      run: |
+        python -m pipx run --spec git+https://github.com/EO-DataHub/eoap-gen.git eoap-gen \
+        --config=${{ inputs.config }} \
+        --output=${{ inputs.output }} \
+        --docker-url-base=${{ inputs.docker_url_base }} \
+        --docker-tag=${{ inputs.docker_tag }}
+
+outputs:
+  tools:
+    description: List of tool names
+    value: ${{ steps.gen.outputs.tools }}

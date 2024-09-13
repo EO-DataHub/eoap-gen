@@ -37,7 +37,7 @@ runs:
       shell: bash
       id: gen
       run: |
-        python -m pipx run --spec git+https://github.com/EO-DataHub/eoap-gen.git eoap-gen \
+        python -m pipx run --spec git+https://github.com/EO-DataHub/eoap-gen.git eoap-gen generate \
         --config=${{ inputs.config }} \
         --output=${{ inputs.output }} \
         --docker-url-base=${{ inputs.docker_url_base }} \

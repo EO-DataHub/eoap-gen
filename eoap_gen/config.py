@@ -231,7 +231,7 @@ class WorkflowConfig:
 
     def set_step_run(self, cli_dir: Path):
         for step in self.steps:
-            step.run = cli_dir / step.id_ / f"{step.script.stem}.cwl"
+            step.run = cli_dir / step.id_ / f"{step.id_}.cwl"
 
     def to_cwl(self):
         return Workflow(

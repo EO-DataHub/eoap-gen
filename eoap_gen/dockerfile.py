@@ -22,16 +22,19 @@ def get_dockerfile_content(script_path: Path, requirements: list[str] = []) -> s
 def save_dockerfile(
     directory: Path,
     script_path: Path,
+    step_id: str,
     dockerfile_content: str,
 ) -> None:
-    filename = f"{script_path.stem}.Dockerfile"
+    filename = f"{step_id}.Dockerfile"
     path = os.path.join(directory, filename)
 
     with open(path, "w") as f:
         f.write(dockerfile_content.strip())
 
 
-def generate_dockerfile(script_path: Path, reqs_path: Path, save_dir: Path):
+def generate_dockerfile(
+    script_path: Path, step_id: str, reqs_path: Path, save_dir: Path
+):
     reqs = get_requirements(reqs_path)
     content = get_dockerfile_content(script_path, reqs)
-    save_dockerfile(save_dir, script_path, content)
+    save_dockerfile(save_dir, script_path, step_id, content)

@@ -58,16 +58,17 @@ def generate(
     create_output_dirs(output_path, [s.id_ for s in config.steps])
     for s in config.steps:
         step_output_dir = output_path / "cli" / s.id_
-        generate_dockerfile(s.script, s.requirements, step_output_dir)
+        generate_dockerfile(s.script, s.id_, s.requirements, step_output_dir)
         write_cwl_cli_outputs(step_output_dir / "tool_out.yml", s.outputs)
         generate_cwl_cli(
             script_path=s.script,
             output_dir=step_output_dir,
+            step_id=s.id_,
             requirements=get_requirements(s.requirements),
             cwl_outputs_path=step_output_dir / "tool_out.yml",
         )
-        full_docker_url = os.path.join(docker_url_base, f"{s.script.stem}:{docker_tag}")
-        modify_cwl_cli(step_output_dir / f"{s.script.stem}.cwl", full_docker_url)
+        full_docker_url = os.path.join(docker_url_base, f"{s.id_}:{docker_tag}")
+        modify_cwl_cli(step_output_dir / f"{s.script.stem}.cwl", full_docker_url, s.id_)
 
     config.set_step_run(output_path / "cli")
     wf_path = output_path / "cli" / "workflow.cwl"

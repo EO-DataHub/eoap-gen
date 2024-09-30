@@ -1,4 +1,5 @@
 import json
+import os
 import shutil
 import subprocess
 from pathlib import Path
@@ -17,12 +18,13 @@ yaml.default_flow_style = False
 def generate_cwl_cli(
     script_path: Path,
     output_dir: Path,
+    step_id: str,
     venv: str | None = None,
     requirements: list[str] = [],
     cwl_outputs_path: Path | None = None,
 ):
     if not venv:
-        venv = f"{script_path.stem}-venv"
+        venv = f"{step_id}-venv"
     new_script_path = shutil.copy2(script_path, output_dir)
     cmd = get_template("cwltool.jinja").render(
         output_dir=output_dir.resolve(),
@@ -46,15 +48,17 @@ def write_cwl_cli_outputs(path: Path, outputs: list[StepOutputConfig]):
         yaml.dump(raw, f)
 
 
-def modify_cwl_cli(cwl_path: Path, docker_url: str):
-    tool_obj: CommandLineTool = load_document_by_uri(cwl_path)
+def modify_cwl_cli(cwl_path: Path, docker_url: str, step_id: str):
+    new_path = cwl_path.with_stem(step_id)
+    os.rename(cwl_path, new_path)
+    tool_obj: CommandLineTool = load_document_by_uri(new_path)
 
     tool_obj.hints = [DockerRequirement(dockerPull=docker_url)]
     tool_obj.baseCommand = ["python", "/app/app.py"]
 
     tool_dict = save(tool_obj)
 
-    with open(cwl_path, "w") as f:
+    with open(new_path, "w") as f:
         yaml.dump(tool_dict, f)
 
 

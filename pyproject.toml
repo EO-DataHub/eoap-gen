@@ -6,7 +6,7 @@ authors = ["Dusan Figala <dusan@oxidian.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "3.11.*"
+python = "^3.10,<3.12"
 click = "^8.1.7"
 argparse2tool = "^0.4.9"
 cwl-utils = "^0.33"

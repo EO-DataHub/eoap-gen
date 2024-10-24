@@ -16,7 +16,7 @@ def write_action_output(config: WorkflowConfig):
     if not gh_output:
         return
 
-    tools = [s.id_ for s in config.steps]
+    tools = [s.id_ for s in config.steps if s.script]
 
     with open(gh_output, "a") as f:
         print("tools<<EOF", file=f)

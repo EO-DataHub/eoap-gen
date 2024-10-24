@@ -1,8 +1,14 @@
 # eoap-gen guide for ADES
 
-In this tutorial we'll create an Earth Observation Application package and upload it to ADES.
+In this tutorial we'll create an Earth Observation Application package and upload it to ADES. This package have 3 steps:
+
+1. Get urls of all cogs in a collection - Custom python script
+2. Resize all cogs to 5% of their original size - using an existing docker image for GDAL
+3. Create a STAC catalog from the resized cogs - Custom python script
 
 ## Scripts
+
+### Python CLI script
 
 Create a python CLI script using [click](https://click.palletsprojects.com)
 
@@ -56,7 +62,7 @@ pyeodh
 
 ADES requires a directory output from the workflow containing a STAC catalog. The catalog must link to files that we want to get as outputs in our workspace. We can achieve this by writing a script and using the pystac library.
 
-Again it will be a CLI script (using click). It accepts 1 or more file paths as arguments. It creates a basic stac catalog, which contains an Item containing an Asset with the file path as a Link. There are also some default property values set to make it a valid STAC Catalog.
+Again it will be a CLI script (using click). It accepts 1 or more file paths as arguments - outputs from the GDAL resize step. It creates a basic stac catalog, which contains an Item containing an Asset with the file path as a Link. There are also some default property values set to make it a valid STAC Catalog.
 
 ```python
 import datetime
@@ -133,10 +139,20 @@ inputs:
     doc: collection id
     type: string
     default: sentinel2_ard
+  - id: outsize_x
+    label: outsize_x
+    doc: outsize_x
+    type: string
+    default: 5%
+  - id: outsize_y
+    label: outsize_y
+    doc: outsize_y
+    type: string
+    default: 5%
 outputs:
   - id: stac_output
     type: Directory
-    source: step3/stac_catalog
+    source: make_stac/stac_catalog
 steps:
   - id: get_urls
     script: playground/get_urls.py
@@ -159,6 +175,39 @@ steps:
           loadContents: true
           glob: ids.txt
           outputEval: $(self[0].contents.split('\n'))
+  - id: process
+    docker_image: ghcr.io/osgeo/gdal:ubuntu-small-latest
+    command: gdal_translate /vsicurl/${url} ${id} -outsize ${outsize_x} ${outsize_y}
+    scatter_method: dotproduct
+    inputs:
+      - id: outsize_x
+        source: resize-collection/outsize_x
+      - id: outsize_y
+        source: resize-collection/outsize_y
+      - id: url
+        source: get_urls/urls
+        scatter: true
+      - id: id
+        source: get_urls/ids
+        scatter: true
+        value_from: $(self + "_resized.tif")
+    outputs:
+      - id: resized
+        type: File
+        outputBinding:
+          glob: "*.tif"
+  - id: make_stac
+    script: playground/make_stac.py
+    requirements: playground/make_stac_reqs.txt
+    inputs:
+      - id: files
+        source: process/resized
+        type: File[]
+    outputs:
+      - id: stac_catalog
+        outputBinding:
+          glob: .
+        type: Directory
 ```
 
 ## Github Workflow

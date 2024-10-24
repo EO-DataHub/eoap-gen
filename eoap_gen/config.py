@@ -9,6 +9,7 @@ from cwl_utils.parser.cwl_v1_0 import (
     WorkflowStep,
     WorkflowStepInput,
     WorkflowStepOutput,
+    ScatterFeatureRequirement,
 )
 from ruamel.yaml import YAML
 
@@ -91,20 +92,45 @@ class WorkflowOutputConfig:
 class StepInputConfig:
     id_: str
     source: str
+    scatter: bool
+    value_from: str | None
+    default: str | None
+    type_: str | None
 
-    def __init__(self, id_: str, source: str) -> None:
+    def __init__(
+        self,
+        id_: str,
+        source: str,
+        scatter: bool = False,
+        value_from: str | None = None,
+        default: str | None = None,
+        type_: str | None = None,
+    ) -> None:
         self.id_ = id_
         self.source = source
+        self.scatter = scatter
+        self.value_from = value_from
+        self.default = default
+        self.type_ = type_
 
     @staticmethod
     def from_dict(d: dict[str, Any]):
         return StepInputConfig(
             id_=d["id"],
             source=d["source"],
+            scatter=d.get("scatter", False),
+            value_from=d.get("value_from"),
+            default=d.get("default"),
+            type_=d.get("type"),
         )
 
     def to_cwl(self):
-        return WorkflowStepInput(id=self.id_, source=self.source)
+        return WorkflowStepInput(
+            id=self.id_,
+            source=self.source,
+            valueFrom=self.value_from,
+            default=self.default,
+        )
 
 
 class StepOutputConfig:
@@ -129,33 +155,49 @@ class StepOutputConfig:
 
 class StepConfig:
     id_: str
-    script: Path
-    requirements: Path
+    script: Path | None  # if generating from py script
+    requirements: Path | None  # if generating from py script
+    docker_image: str | None  # if 3rd party docker image
+    command: str | None  # if 3rd party docker image
     inputs: list[StepInputConfig]
     outputs: list[StepOutputConfig]
+    scatter_ids: list[str]
+    scatter_method: str | None
     run: Path
 
     def __init__(
         self,
         id_: str,
-        script: os.PathLike,
-        requirements: os.PathLike,
         inputs: list[StepInputConfig],
         outputs: list[StepOutputConfig],
+        script: os.PathLike | None = None,
+        requirements: os.PathLike | None = None,
+        docker_image: str | None = None,
+        command: str | None = None,
+        scatter_ids: list[str] | None = None,
+        scatter_method: str | None = None,
     ) -> None:
         self.id_ = id_
-        self.script = Path(script)
-        self.requirements = Path(requirements)
+        self.script = Path(script) if script else None
+        self.requirements = Path(requirements) if requirements else None
+        self.docker_image = docker_image
+        self.command = command
         self.inputs = inputs
         self.outputs = outputs
+        self.scatter_ids = scatter_ids
+        if scatter_ids and not scatter_method:
+            self.scatter_method = "dotproduct"
+        else:
+            self.scatter_method = scatter_method
 
     @staticmethod
     def from_dict(d: dict[str, Any]):
         inputs_raw = d.get("inputs")
         inputs = []
+        scatter_ids = None
         if inputs_raw:
             inputs = [StepInputConfig.from_dict(inp) for inp in inputs_raw]
-
+            scatter_ids = [inp.id_ for inp in inputs if inp.scatter]
         outputs_raw = d.get("outputs")
         outputs = []
         if outputs_raw:
@@ -163,10 +205,14 @@ class StepConfig:
 
         return StepConfig(
             id_=d["id"],
-            script=d["script"],
-            requirements=d["requirements"],
+            script=d.get("script"),
+            requirements=d.get("requirements"),
+            docker_image=d.get("docker_image"),
+            command=d.get("command"),
             inputs=inputs,
             outputs=outputs,
+            scatter_ids=scatter_ids,
+            scatter_method=d.get("scatter_method"),
         )
 
     def to_cwl(self):
@@ -175,6 +221,8 @@ class StepConfig:
             run=str(self.run.resolve()),
             in_=[inp.to_cwl() for inp in self.inputs],
             out=[out.to_cwl() for out in self.outputs],
+            scatter=self.scatter_ids or None,
+            scatterMethod=self.scatter_method,
         )
 
 
@@ -242,4 +290,5 @@ class WorkflowConfig:
             outputs=[out.to_cwl() for out in self.outputs],
             steps=[step.to_cwl() for step in self.steps],
             cwlVersion="v1.0",
+            requirements=[ScatterFeatureRequirement()],
         )

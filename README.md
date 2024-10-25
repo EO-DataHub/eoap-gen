@@ -14,7 +14,7 @@ A CLI tool for generating Earth Observation Application Packages including CWL w
 
 ## Configuration
 
-EOAP-GEN requires a yaml formatted configuration file. This configuration contains certain setting for CWL and especially the flow of data between user inputs, workflow steps and wf output. For more EODH ADES specific guidance see this [tutorial]().
+EOAP-GEN requires a yaml formatted configuration file. This configuration contains certain setting for CWL and especially the flow of data between user inputs, workflow steps and wf output. For more EODH ADES specific guidance see this [tutorial](ades_guide.md).
 
 Example of a single step configuration
 

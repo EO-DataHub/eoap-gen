@@ -1,0 +1,13 @@
+outputs:
+  urls:
+    type: string[]
+    outputBinding:
+      loadContents: true
+      glob: urls.txt
+      outputEval: $(self[0].contents.split('\n'))
+  ids:
+    type: string[]
+    outputBinding:
+      loadContents: true
+      glob: ids.txt
+      outputEval: $(self[0].contents.split('\n'))

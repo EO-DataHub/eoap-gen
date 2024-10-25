@@ -1,0 +1,83 @@
+id: resize-collection
+doc: Resize collection cogs
+label: Resize collection cogs
+inputs:
+  - id: catalog
+    label: catalog
+    doc: full catalog path
+    type: string
+    default: supported-datasets/ceda-stac-fastapi
+  - id: collection
+    label: collection id
+    doc: collection id
+    type: string
+    default: sentinel2_ard
+  - id: outsize_x
+    label: outsize_x
+    doc: outsize_x
+    type: string
+    default: 5%
+  - id: outsize_y
+    label: outsize_y
+    doc: outsize_y
+    type: string
+    default: 5%
+outputs:
+  - id: stac_output
+    type: Directory
+    source: make_stac/stac_catalog
+steps:
+  - id: get_urls
+    script: tests/data/get_urls.py
+    requirements: tests/data/get_urls_reqs.txt
+    inputs:
+      - id: catalog
+        source: resize-collection/catalog
+      - id: collection
+        source: resize-collection/collection
+    outputs:
+      - id: urls
+        type: string[]
+        outputBinding:
+          loadContents: true
+          glob: urls.txt
+          outputEval: $(self[0].contents.split('\n'))
+      - id: ids
+        type: string[]
+        outputBinding:
+          loadContents: true
+          glob: ids.txt
+          outputEval: $(self[0].contents.split('\n'))
+  - id: process
+    docker_image: ghcr.io/osgeo/gdal:ubuntu-small-latest
+    command: gdal_translate /vsicurl/${url} ${id} -outsize ${outsize_x} ${outsize_y}
+    scatter_method: dotproduct
+    inputs:
+      - id: outsize_x
+        source: resize-collection/outsize_x
+      - id: outsize_y
+        source: resize-collection/outsize_y
+      - id: url
+        source: get_urls/urls
+        scatter: true
+      - id: id
+        source: get_urls/ids
+        scatter: true
+        value_from: $(self + "_resized.tif")
+    outputs:
+      - id: resized
+        type: File
+        outputBinding:
+          glob: "*.tif"
+  - id: make_stac
+    script: tests/data/make_stac.py
+    requirements: tests/data/make_stac_reqs.txt
+    inputs:
+      - id: files
+        source: process/resized
+        type: File[]
+    outputs:
+      - id: stac_catalog
+        outputBinding:
+          glob: .
+        type: Directory

@@ -1,5 +1,6 @@
 # EOAP-GEN
 
+[![codecov](https://codecov.io/gh/EO-DataHub/eoap-gen/graph/badge.svg?token=8SPB2DV06P)](https://codecov.io/gh/EO-DataHub/eoap-gen)
 A CLI tool for generating Earth Observation Application Packages including CWL workflows and Dockerfiles from user supplied python scripts.
 
 # Usage

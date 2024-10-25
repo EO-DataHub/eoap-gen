@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "eoap-gen"
-version = "0.1.0"
+version = "0.0.1"
 description = ""
 authors = ["Dusan Figala <dusan@oxidian.com>"]
 readme = "README.md"

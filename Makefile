@@ -7,3 +7,5 @@ check:
 	poetry run flake8 ${package}
 	poetry run isort --check --diff ${package}
 	poetry run pyright
+test:
+	poetry run pytest -v --cov=./ --cov-report=xml

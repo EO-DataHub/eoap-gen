@@ -1,17 +1,16 @@
 import json
 import os
+import re
 import shutil
 import subprocess
-import re
 from pathlib import Path
-
 
 from cwl_utils.parser import load_document_by_uri, save
 from cwl_utils.parser.cwl_v1_0 import (
-    CommandLineTool,
-    DockerRequirement,
     CommandInputParameter,
     CommandLineBinding,
+    CommandLineTool,
+    DockerRequirement,
     InlineJavascriptRequirement,
 )
 from ruamel.yaml import YAML
@@ -49,6 +48,8 @@ def generate_cwl_cli(
 
 
 def generate_docker_cli(step: StepConfig, output_dir: Path) -> None:
+    if not step.command:
+        raise ValueError(f"Step {step.id_} has no command.")
     command_parts = step.command.split()
     base_command = []
     inputs = []
@@ -69,6 +70,8 @@ def generate_docker_cli(step: StepConfig, output_dir: Path) -> None:
                 prefix = f"{next_prefix} {prefix}"
             inp_id = re_match.group(2)
             inp_config = next((i for i in step.inputs if i.id_ == inp_id), None)
+            if not inp_config:
+                raise ValueError(f"Step {step.id_} has no input {inp_id}.")
             inp = CommandInputParameter(
                 id=inp_id,
                 type_="string",
@@ -122,9 +125,12 @@ def modify_cwl_cli(cwl_path: Path, docker_url: str, step: StepConfig):
     tool_obj.baseCommand = ["python", "/app/app.py"]
     for inp in step.inputs:
         if inp.type_:
-            next((i for i in tool_obj.inputs if f"#{inp.id_}" in i.id), None).type_ = (
-                inp.type_
+            inp_config = next(
+                (i for i in tool_obj.inputs if f"#{inp.id_}" in i.id), None
             )
+            if not inp_config:
+                raise ValueError(f"Step {step.id_} has no input {inp.id_}.")
+            inp_config.type_ = inp.type_
 
     tool_dict = save(tool_obj)
 

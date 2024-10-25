@@ -35,5 +35,7 @@ def save_dockerfile(
 
 def generate_dockerfile(step: StepConfig, save_dir: Path):
     reqs = get_requirements(step.requirements)
+    if not step.script:
+        raise ValueError(f"Step {step.id_} has no script.")
     content = get_dockerfile_content(step.script, reqs)
     save_dockerfile(save_dir, step.script, step.id_, content)

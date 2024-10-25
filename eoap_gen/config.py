@@ -4,12 +4,12 @@ from typing import Any
 
 from cwl_utils.parser.cwl_v1_0 import (
     InputParameter,
+    ScatterFeatureRequirement,
     Workflow,
     WorkflowOutputParameter,
     WorkflowStep,
     WorkflowStepInput,
     WorkflowStepOutput,
-    ScatterFeatureRequirement,
 )
 from ruamel.yaml import YAML
 
@@ -161,7 +161,7 @@ class StepConfig:
     command: str | None  # if 3rd party docker image
     inputs: list[StepInputConfig]
     outputs: list[StepOutputConfig]
-    scatter_ids: list[str]
+    scatter_ids: list[str] | None
     scatter_method: str | None
     run: Path
 

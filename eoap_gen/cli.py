@@ -61,7 +61,7 @@ def generate(
         step_output_dir = output_path / "cli" / s.id_
         if s.docker_image:
             generate_docker_cli(s, step_output_dir)
-        else:
+        elif s.script:
             generate_dockerfile(s, step_output_dir)
             write_cwl_cli_outputs(step_output_dir / "tool_out.yml", s.outputs)
             generate_cwl_cli(
@@ -73,7 +73,8 @@ def generate(
             )
             full_docker_url = os.path.join(docker_url_base, f"{s.id_}:{docker_tag}")
             modify_cwl_cli(step_output_dir / f"{s.script.stem}.cwl", full_docker_url, s)
-
+        else:
+            raise ValueError(f"Step {s.id_} has no docker image or script.")
     config.set_step_run(output_path / "cli")
     wf_path = output_path / "cli" / "workflow.cwl"
     generate_workflow(config, wf_path)

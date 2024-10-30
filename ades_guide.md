@@ -6,6 +6,12 @@ In this tutorial we'll create an Earth Observation Application package and uploa
 2. Resize all cogs to 5% of their original size - using an existing docker image for GDAL
 3. Create a STAC catalog from the resized cogs - Custom python script
 
+The flow of inputs/outputs between steps in the workflow will be like this:
+
+<p align="center">
+<a href="wf_diagram.png"><img src="wf_diagram.png" width="400"/></a>
+</p>
+
 ## Scripts
 
 ### Python CLI script

@@ -91,7 +91,7 @@ def generate_docker_cli(step: StepConfig, output_dir: Path) -> None:
 
     tool_obj = CommandLineTool(
         baseCommand=command_parts[0],
-        hints=[
+        requirements=[
             DockerRequirement(dockerPull=step.docker_image),
             InlineJavascriptRequirement(),
         ],
@@ -118,7 +118,7 @@ def modify_cwl_cli(cwl_path: Path, docker_url: str, step: StepConfig):
     os.rename(cwl_path, new_path)
     tool_obj: CommandLineTool = load_document_by_uri(new_path)
 
-    tool_obj.hints = [
+    tool_obj.requirements = [
         DockerRequirement(dockerPull=docker_url),
         InlineJavascriptRequirement(),
     ]

@@ -144,7 +144,7 @@ def generate_workflow(config: WorkflowConfig, wf_path: Path):
         yaml.dump(save(wf, relative_uris=False), f)
 
 
-def pack_workflow(wf_path: Path):
+def pack_workflow(wf_path: Path) -> Path:
     wf_abs_path = wf_path.resolve()
     pack_res = subprocess.run(
         f"cwltool --pack {wf_abs_path}",
@@ -157,8 +157,10 @@ def pack_workflow(wf_path: Path):
         print("Command stderr: ", pack_res.stderr)
         raise RuntimeError("Failed packing workflow.")
     packed_obj = json.loads(pack_res.stdout)
-    with open(wf_abs_path.with_stem(f"{wf_abs_path.stem}-packed"), "w") as f:
+    packed_path = wf_abs_path.with_stem(f"{wf_abs_path.stem}-packed")
+    with open(packed_path, "w") as f:
         yaml.dump(packed_obj, f)
+    return packed_path
 
 
 def validate_workflow(wf_path: Path) -> bool:

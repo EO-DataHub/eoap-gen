@@ -78,6 +78,6 @@ def generate(
     config.set_step_run(output_path / "cli")
     wf_path = output_path / "cli" / "workflow.cwl"
     generate_workflow(config, wf_path)
-    pack_workflow(wf_path)
-    validate_workflow(wf_path)
+    packed_wf_path = pack_workflow(wf_path)
+    validate_workflow(packed_wf_path)
     write_action_output(config)

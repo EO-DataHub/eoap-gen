@@ -157,6 +157,7 @@ class StepConfig:
     id_: str
     script: Path | None  # if generating from py script
     requirements: Path | None  # if generating from py script
+    apt_install: list[str] | None  # if generating from py script
     docker_image: str | None  # if 3rd party docker image
     command: str | None  # if 3rd party docker image
     inputs: list[StepInputConfig]
@@ -172,6 +173,7 @@ class StepConfig:
         outputs: list[StepOutputConfig],
         script: os.PathLike | None = None,
         requirements: os.PathLike | None = None,
+        apt_install: list[str] | None = None,
         docker_image: str | None = None,
         command: str | None = None,
         scatter_ids: list[str] | None = None,
@@ -180,6 +182,7 @@ class StepConfig:
         self.id_ = id_
         self.script = Path(script) if script else None
         self.requirements = Path(requirements) if requirements else None
+        self.apt_install = apt_install
         self.docker_image = docker_image
         self.command = command
         self.inputs = inputs
@@ -207,6 +210,7 @@ class StepConfig:
             id_=d["id"],
             script=d.get("script"),
             requirements=d.get("requirements"),
+            apt_install=d.get("apt_install"),
             docker_image=d.get("docker_image"),
             command=d.get("command"),
             inputs=inputs,

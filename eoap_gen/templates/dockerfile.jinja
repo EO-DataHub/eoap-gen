@@ -1,5 +1,9 @@
 FROM python:3-slim
 
+{% if apt_install is defined and apt_install %}
+RUN apt update && apt install -y {{ apt_install|join(" ") }}
+{% endif %}
+
 WORKDIR /app
 
 {% if (requirements is defined) and requirements %}

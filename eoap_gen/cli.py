@@ -5,6 +5,7 @@ import click
 
 from eoap_gen.config import WorkflowConfig
 from eoap_gen.cwl import (
+    cleanup_packed_workflow,
     generate_cwl_cli,
     generate_docker_cli,
     generate_workflow,
@@ -79,5 +80,6 @@ def generate(
     wf_path = output_path / "cli" / "workflow.cwl"
     generate_workflow(config, wf_path)
     packed_wf_path = pack_workflow(wf_path)
+    cleanup_packed_workflow(packed_wf_path, config.id_)
     validate_workflow(packed_wf_path)
     write_action_output(config)

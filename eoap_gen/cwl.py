@@ -163,6 +163,28 @@ def pack_workflow(wf_path: Path) -> Path:
     return packed_path
 
 
+def cleanup_packed_workflow(packed_path: Path, wf_id: str):
+    res = subprocess.run(
+        f"sed -i 's/\\([^ ]*\\)\\.cwl/\\1/g' {packed_path}",
+        shell=True,
+        executable="/bin/bash",
+    )
+    if res.returncode != 0:
+        print("Command stdout: ", res.stdout)
+        print("Command stderr: ", res.stderr)
+        raise RuntimeError("Failed cleaning up packed workflow.")
+
+    res = subprocess.run(
+        f"sed -i 's/#main/#{wf_id}/g' {packed_path}",
+        shell=True,
+        executable="/bin/bash",
+    )
+    if res.returncode != 0:
+        print("Command stdout: ", res.stdout)
+        print("Command stderr: ", res.stderr)
+        raise RuntimeError("Failed cleaning up packed workflow.")
+
+
 def validate_workflow(wf_path: Path) -> bool:
     abs_path = wf_path.resolve()
     res = subprocess.run(

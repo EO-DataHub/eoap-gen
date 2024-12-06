@@ -17,11 +17,16 @@ def get_dockerfile_content(
     script_path: Path,
     requirements: list[str] = [],
     apt_install: list[str] = [],
+    conda: list[str] = [],
+    python_version: str = "3.12",
 ) -> str:
+
     return get_template("dockerfile.jinja").render(
         requirements=requirements,
         apt_install=apt_install,
         script_name=script_path.name,
+        conda=conda,
+        python_version=python_version,
     )
 
 
@@ -42,5 +47,7 @@ def generate_dockerfile(step: StepConfig, save_dir: Path):
     reqs = get_requirements(step.requirements)
     if not step.script:
         raise ValueError(f"Step {step.id_} has no script.")
-    content = get_dockerfile_content(step.script, reqs, step.apt_install)
+    content = get_dockerfile_content(
+        step.script, reqs, step.apt_install, step.conda, step.python_version
+    )
     save_dockerfile(save_dir, step.script, step.id_, content)

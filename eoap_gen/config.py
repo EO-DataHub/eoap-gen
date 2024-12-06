@@ -165,6 +165,12 @@ class StepConfig:
     scatter_ids: list[str] | None
     scatter_method: str | None
     run: Path
+    conda: (
+        list[str] | None
+    )  # if generating from py script, and should create a conda env
+    python_version: (
+        str | None
+    )  # if generating from py script, and should create a conda env
 
     def __init__(
         self,
@@ -178,6 +184,8 @@ class StepConfig:
         command: str | None = None,
         scatter_ids: list[str] | None = None,
         scatter_method: str | None = None,
+        conda: list[str] | None = None,
+        python_version: str | None = None,
     ) -> None:
         self.id_ = id_
         self.script = Path(script) if script else None
@@ -192,6 +200,8 @@ class StepConfig:
             self.scatter_method = "dotproduct"
         else:
             self.scatter_method = scatter_method
+        self.conda = conda
+        self.python_version = python_version
 
     @staticmethod
     def from_dict(d: dict[str, Any]):
@@ -217,6 +227,8 @@ class StepConfig:
             outputs=outputs,
             scatter_ids=scatter_ids,
             scatter_method=d.get("scatter_method"),
+            conda=d.get("conda"),
+            python_version=d.get("python_version"),
         )
 
     def to_cwl(self):

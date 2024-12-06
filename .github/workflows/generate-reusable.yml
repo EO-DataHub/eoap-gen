@@ -65,9 +65,9 @@ jobs:
       - name: Push changes
         if: ${{ env.GIT_STATUS_MODIFIED == 'true' }}
         run: |
-          git pull --rebase
           git add ${{ inputs.output }}/*
           git commit --no-verify -m "Generate EOAP"
+          git pull --rebase
           git push origin ${{ github.head_ref || github.ref }}
 
   build-push:

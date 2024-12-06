@@ -71,6 +71,8 @@ def generate(
                 step_id=s.id_,
                 requirements=get_requirements(s.requirements),
                 cwl_outputs_path=step_output_dir / "tool_out.yml",
+                conda_pkgs=s.conda,
+                python_version=s.python_version,
             )
             full_docker_url = os.path.join(docker_url_base, f"{s.id_}:{docker_tag}")
             modify_cwl_cli(step_output_dir / f"{s.script.stem}.cwl", full_docker_url, s)

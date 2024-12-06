@@ -29,9 +29,16 @@ def generate_cwl_cli(
     venv: str | None = None,
     requirements: list[str] = [],
     cwl_outputs_path: Path | None = None,
+    conda_pkgs: list[str] = [],
+    python_version: str | None = None,
 ):
     if not venv:
         venv = f"{step_id}-venv"
+
+    if conda_pkgs:
+        conda_env = venv
+    else:
+        conda_env = None
     new_script_path = shutil.copy2(script_path, output_dir)
     cmd = get_template("cwltool.jinja").render(
         output_dir=output_dir.resolve(),
@@ -39,6 +46,9 @@ def generate_cwl_cli(
         requirements=requirements,
         script_path=Path(new_script_path).resolve(),
         cwl_outputs_path=cwl_outputs_path.resolve() if cwl_outputs_path else None,
+        conda_env=conda_env,
+        conda_pkgs=conda_pkgs,
+        python_version=python_version,
     )
     res = subprocess.run(cmd, shell=True, executable="/bin/bash", capture_output=True)
     if res.returncode != 0:

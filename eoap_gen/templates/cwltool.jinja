@@ -3,7 +3,8 @@ set -e
 cd {{ output_dir }}
 
 {% if conda_env is defined and conda_env %}
-micromamba env create -p ./{{ conda_env }} -c conda-forge python={{ python_version|default("3.12", true) }} {{ conda_pkgs|join(" ") }}
+eval "$(micromamba shell hook --shell bash)"
+micromamba env create -y -p ./{{ conda_env }} -c conda-forge python={{ python_version|default("3.12", true) }} {{ conda_pkgs|join(" ") }}
 micromamba activate ./{{ conda_env }}
 {% else %}
 python -m venv {{ venv }}

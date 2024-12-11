@@ -4,6 +4,7 @@ from typing import Any
 
 from cwl_utils.parser.cwl_v1_0 import (
     InputParameter,
+    ResourceRequirement,
     ScatterFeatureRequirement,
     Workflow,
     WorkflowOutputParameter,
@@ -249,6 +250,10 @@ class WorkflowConfig:
     inputs: list[WorkflowInputConfig]
     outputs: list[WorkflowOutputConfig]
     steps: list[StepConfig]
+    ram_min: int | float | None
+    ram_max: int | float | None
+    cores_min: int | float | None
+    cores_max: int | float | None
 
     def __init__(
         self,
@@ -258,6 +263,10 @@ class WorkflowConfig:
         steps: list[StepConfig],
         doc: str | None = None,
         label: str | None = None,
+        ram_min: int | float | None = None,
+        ram_max: int | float | None = None,
+        cores_min: int | float | None = None,
+        cores_max: int | float | None = None,
     ) -> None:
         self.id_ = id_
         self.doc = doc or label or id_
@@ -265,6 +274,10 @@ class WorkflowConfig:
         self.inputs = inputs
         self.outputs = outputs
         self.steps = steps
+        self.ram_min = ram_min
+        self.ram_max = ram_max
+        self.cores_min = cores_min
+        self.cores_max = cores_max
 
     @staticmethod
     def from_dict(d: dict[str, Any]):
@@ -276,7 +289,7 @@ class WorkflowConfig:
         outputs = [WorkflowOutputConfig.from_dict(out) for out in d["outputs"]]
 
         steps = [StepConfig.from_dict(s) for s in d["steps"]]
-
+        resources = d.get("resources", {})
         return WorkflowConfig(
             id_=d["id"],
             doc=d.get("doc"),
@@ -284,6 +297,10 @@ class WorkflowConfig:
             inputs=inputs,
             outputs=outputs,
             steps=steps,
+            ram_min=resources.get("ram_min"),
+            ram_max=resources.get("ram_max"),
+            cores_min=resources.get("cores_min"),
+            cores_max=resources.get("cores_max"),
         )
 
     @staticmethod
@@ -298,6 +315,16 @@ class WorkflowConfig:
             step.run = cli_dir / step.id_ / f"{step.id_}.cwl"
 
     def to_cwl(self):
+        additional_requirements = []
+        if self.ram_min or self.ram_max or self.cores_min or self.cores_max:
+            additional_requirements.append(
+                ResourceRequirement(
+                    ramMin=self.ram_min,
+                    ramMax=self.ram_max,
+                    coresMin=self.cores_min,
+                    coresMax=self.cores_max,
+                )
+            )
         return Workflow(
             id=self.id_,
             doc=self.doc,
@@ -306,5 +333,5 @@ class WorkflowConfig:
             outputs=[out.to_cwl() for out in self.outputs],
             steps=[step.to_cwl() for step in self.steps],
             cwlVersion="v1.0",
-            requirements=[ScatterFeatureRequirement()],
+            requirements=[ScatterFeatureRequirement(), *additional_requirements],
         )

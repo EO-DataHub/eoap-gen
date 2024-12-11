@@ -132,7 +132,12 @@ def modify_cwl_cli(cwl_path: Path, docker_url: str, step: StepConfig):
         DockerRequirement(dockerPull=docker_url),
         InlineJavascriptRequirement(),
     ]
+
     tool_obj.baseCommand = ["python", "/app/app.py"]
+    if step.conda:
+        # if using micromamba, need to run the entrypoint script explicitly
+        tool_obj.baseCommand.insert(0, "/usr/local/bin/_entrypoint.sh")
+
     for inp in step.inputs:
         if inp.type_:
             inp_config = next(

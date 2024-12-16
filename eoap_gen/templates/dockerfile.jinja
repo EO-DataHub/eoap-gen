@@ -1,4 +1,4 @@
-{% if conda %}
+{% if conda is defined and conda %}
 FROM mambaorg/micromamba
 {% else %}
 FROM python:3-slim
@@ -10,7 +10,7 @@ RUN apt update && apt install -y {{ apt_install|join(" ") }}
 
 WORKDIR /app
 
-{% if conda %}
+{% if conda is defined and conda %}
 RUN micromamba install -y -n base -c conda-forge python={{ python_version|default("3.12", true) }} {{ conda|join(" ") }}
 ARG MAMBA_DOCKERFILE_ACTIVATE=1
 ENV NUMBA_CACHE_DIR=/tmp

@@ -1,6 +1,14 @@
 id: resize-collection
 doc: Resize collection cogs
 label: Resize collection cogs
+
+# either set min and/or max https://www.commonwl.org/v1.2/CommandLineTool.html#ResourceRequirement
+resources:
+  cores_min: 1
+  # cores_max: 1
+  ram_min: 1024
+  # ram_max: 1024
+
 inputs:
   - id: catalog
     label: catalog
@@ -30,6 +38,8 @@ steps:
   - id: get_urls
     script: tests/data/get_urls.py
     requirements: tests/data/get_urls_reqs.txt
+    conda:
+      - eo-tools
     inputs:
       - id: catalog
         source: resize-collection/catalog

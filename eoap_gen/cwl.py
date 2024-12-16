@@ -29,7 +29,7 @@ def generate_cwl_cli(
     venv: str | None = None,
     requirements: list[str] = [],
     cwl_outputs_path: Path | None = None,
-    conda_pkgs: list[str] = [],
+    conda_pkgs: list[str] | None = None,
     python_version: str | None = None,
 ):
     if not venv:

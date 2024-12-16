@@ -28,7 +28,7 @@ outputs:
     type: File
     outputBinding:
       glob: '*.tif'
-hints:
+requirements:
 - class: DockerRequirement
   dockerPull: ghcr.io/osgeo/gdal:ubuntu-small-latest
 - class: InlineJavascriptRequirement

@@ -1,6 +1,6 @@
 class: CommandLineTool
 id: 
-  file:///home/figi/software/projects/eodh/eoap-gen/tests/data/ref-out/cli/get_urls/get_urls.cwl
+  file:///home/figi/software/work/eodh/eoap-gen/tests/output/cli/get_urls/get_urls.cwl
 inputs:
 - id: catalog
   inputBinding:
@@ -31,7 +31,7 @@ outputs:
   type:
     items: string
     type: array
-hints:
+requirements:
 - class: DockerRequirement
   dockerPull: ghcr.io/figi44/eoap/get_urls:main
 - class: InlineJavascriptRequirement
@@ -39,5 +39,6 @@ doc: |
   None
 cwlVersion: v1.0
 baseCommand:
+- /usr/local/bin/_entrypoint.sh
 - python
 - /app/app.py

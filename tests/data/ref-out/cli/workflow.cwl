@@ -28,6 +28,9 @@ outputs:
   type: Directory
 requirements:
 - class: ScatterFeatureRequirement
+- class: ResourceRequirement
+  coresMin: 1
+  ramMin: 1024
 label: Resize collection cogs
 doc: Resize collection cogs
 cwlVersion: v1.0
@@ -41,8 +44,7 @@ steps:
   out:
   - id: urls
   - id: ids
-  run: 
-    /home/figi/software/projects/eodh/eoap-gen/tests/data/ref-out/cli/get_urls/get_urls.cwl
+  run: /home/figi/software/work/eodh/eoap-gen/tests/output/cli/get_urls/get_urls.cwl
 - id: process
   in:
   - id: outsize_x
@@ -56,8 +58,7 @@ steps:
     valueFrom: $(self + "_resized.tif")
   out:
   - id: resized
-  run: 
-    /home/figi/software/projects/eodh/eoap-gen/tests/data/ref-out/cli/process/process.cwl
+  run: /home/figi/software/work/eodh/eoap-gen/tests/output/cli/process/process.cwl
   scatter:
   - url
   - id
@@ -68,5 +69,4 @@ steps:
     source: process/resized
   out:
   - id: stac_catalog
-  run: 
-    /home/figi/software/projects/eodh/eoap-gen/tests/data/ref-out/cli/make_stac/make_stac.cwl
+  run: /home/figi/software/work/eodh/eoap-gen/tests/output/cli/make_stac/make_stac.cwl

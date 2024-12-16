@@ -1,6 +1,6 @@
 class: CommandLineTool
 id: 
-  file:///home/figi/software/projects/eodh/eoap-gen/tests/data/ref-out/cli/make_stac/make_stac.cwl
+  file:///home/figi/software/work/eodh/eoap-gen/tests/output/cli/make_stac/make_stac.cwl
 inputs:
 - id: files
   doc: FILES
@@ -10,7 +10,7 @@ outputs:
   outputBinding:
     glob: .
   type: Directory
-hints:
+requirements:
 - class: DockerRequirement
   dockerPull: ghcr.io/figi44/eoap/make_stac:main
 - class: InlineJavascriptRequirement

@@ -1,29 +1,30 @@
 $graph:
 - class: CommandLineTool
-  id: '#get_urls.cwl'
+  id: '#get_urls'
   inputs:
-  - id: '#get_urls.cwl/catalog'
+  - id: '#get_urls/catalog'
     inputBinding:
       prefix: --catalog
     type:
     - 'null'
     - string
-  - id: '#get_urls.cwl/collection'
+  - id: '#get_urls/collection'
     inputBinding:
       prefix: --collection
     type:
     - 'null'
     - string
-  hints:
+  requirements:
   - class: DockerRequirement
     dockerPull: ghcr.io/figi44/eoap/get_urls:main
   - class: InlineJavascriptRequirement
   doc: "None\n"
   baseCommand:
+  - /usr/local/bin/_entrypoint.sh
   - python
   - /app/app.py
   outputs:
-  - id: '#get_urls.cwl/ids'
+  - id: '#get_urls/ids'
     outputBinding:
       glob: ids.txt
       loadContents: true
@@ -31,7 +32,7 @@ $graph:
     type:
       items: string
       type: array
-  - id: '#get_urls.cwl/urls'
+  - id: '#get_urls/urls'
     outputBinding:
       glob: urls.txt
       loadContents: true
@@ -40,19 +41,19 @@ $graph:
       items: string
       type: array
 - class: CommandLineTool
-  id: '#make_stac.cwl'
+  id: '#make_stac'
   inputs:
-  - id: '#make_stac.cwl/files'
+  - id: '#make_stac/files'
     doc: FILES
     type:
       type: array
       items: File
   outputs:
-  - id: '#make_stac.cwl/stac_catalog'
+  - id: '#make_stac/stac_catalog'
     outputBinding:
       glob: .
     type: Directory
-  hints:
+  requirements:
   - class: DockerRequirement
     dockerPull: ghcr.io/figi44/eoap/make_stac:main
   - class: InlineJavascriptRequirement
@@ -62,25 +63,25 @@ $graph:
   - /app/app.py
 - class: CommandLineTool
   inputs:
-  - id: '#process.cwl/url'
+  - id: '#process/url'
     inputBinding:
       position: 1
       prefix: /vsicurl/
       separate: false
     type: string
-  - id: '#process.cwl/id'
+  - id: '#process/id'
     inputBinding:
       position: 2
       separate: false
       valueFrom: $(self + "_resized.tif")
     type: string
-  - id: '#process.cwl/outsize_x'
+  - id: '#process/outsize_x'
     inputBinding:
       position: 4
       prefix: -outsize
       separate: true
     type: string
-  - id: '#process.cwl/outsize_y'
+  - id: '#process/outsize_y'
     inputBinding:
       position: 5
       separate: false
@@ -89,79 +90,82 @@ $graph:
   - type: File
     outputBinding:
       glob: '*.tif'
-    id: '#process.cwl/resized'
-  hints:
+    id: '#process/resized'
+  requirements:
   - class: DockerRequirement
     dockerPull: ghcr.io/osgeo/gdal:ubuntu-small-latest
   - class: InlineJavascriptRequirement
   baseCommand: gdal_translate
-  id: '#process.cwl'
+  id: '#process'
 - class: Workflow
-  id: '#main'
+  id: '#resize-collection'
   inputs:
-  - id: '#main/catalog'
+  - id: '#resize-collection/catalog'
     label: catalog
     doc: full catalog path
     default: supported-datasets/ceda-stac-fastapi
     type: string
-  - id: '#main/collection'
+  - id: '#resize-collection/collection'
     label: collection id
     doc: collection id
     default: sentinel2_ard
     type: string
-  - id: '#main/outsize_x'
+  - id: '#resize-collection/outsize_x'
     label: outsize_x
     doc: outsize_x
     default: 5%
     type: string
-  - id: '#main/outsize_y'
+  - id: '#resize-collection/outsize_y'
     label: outsize_y
     doc: outsize_y
     default: 5%
     type: string
   outputs:
-  - id: '#main/stac_output'
+  - id: '#resize-collection/stac_output'
     outputSource:
-    - '#main/make_stac/stac_catalog'
+    - '#resize-collection/make_stac/stac_catalog'
     type: Directory
   requirements:
   - class: ScatterFeatureRequirement
+  - class: ResourceRequirement
+    coresMin: 1
+    ramMin: 1024
   label: Resize collection cogs
   doc: Resize collection cogs
   steps:
-  - id: '#main/get_urls'
+  - id: '#resize-collection/get_urls'
     in:
-    - id: '#main/get_urls/catalog'
-      source: '#main/catalog'
-    - id: '#main/get_urls/collection'
-      source: '#main/collection'
+    - id: '#resize-collection/get_urls/catalog'
+      source: '#resize-collection/catalog'
+    - id: '#resize-collection/get_urls/collection'
+      source: '#resize-collection/collection'
     out:
-    - id: '#main/get_urls/urls'
-    - id: '#main/get_urls/ids'
-    run: '#get_urls.cwl'
-  - id: '#main/process'
+    - id: '#resize-collection/get_urls/urls'
+    - id: '#resize-collection/get_urls/ids'
+    run: '#get_urls'
+  - id: '#resize-collection/process'
     in:
-    - id: '#main/process/outsize_x'
-      source: '#main/outsize_x'
-    - id: '#main/process/outsize_y'
-      source: '#main/outsize_y'
-    - id: '#main/process/url'
-      source: '#main/get_urls/urls'
-    - id: '#main/process/id'
-      source: '#main/get_urls/ids'
+    - id: '#resize-collection/process/outsize_x'
+      source: '#resize-collection/outsize_x'
+    - id: '#resize-collection/process/outsize_y'
+      source: '#resize-collection/outsize_y'
+    - id: '#resize-collection/process/url'
+      source: '#resize-collection/get_urls/urls'
+    - id: '#resize-collection/process/id'
+      source: '#resize-collection/get_urls/ids'
       valueFrom: $(self + "_resized.tif")
     out:
-    - id: '#main/process/resized'
-    run: '#process.cwl'
+    - id: '#resize-collection/process/resized'
+    run: '#process'
     scatter:
-    - '#main/process/url'
-    - '#main/process/id'
+    - '#resize-collection/process/url'
+    - '#resize-collection/process/id'
     scatterMethod: dotproduct
-  - id: '#main/make_stac'
+  - id: '#resize-collection/make_stac'
     in:
-    - id: '#main/make_stac/files'
-      source: '#main/process/resized'
+    - id: '#resize-collection/make_stac/files'
+      source: '#resize-collection/process/resized'
     out:
-    - id: '#main/make_stac/stac_catalog'
-    run: '#make_stac.cwl'
+    - id: '#resize-collection/make_stac/stac_catalog'
+    run: '#make_stac'
 cwlVersion: v1.0

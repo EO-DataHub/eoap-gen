@@ -53,6 +53,11 @@ jobs:
           python-version: ${{ matrix.python_version }}
           cache: poetry
 
+      - name: Setup micromamba
+        uses: mamba-org/setup-micromamba@v2
+        with:
+          init-shell: bash
+
       - name: Install project
         run: make install
 

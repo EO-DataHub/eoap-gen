@@ -92,7 +92,7 @@ class WorkflowOutputConfig:
 
 class StepInputConfig:
     id_: str
-    source: str
+    source: str | None
     scatter: bool
     value_from: str | None
     default: str | None
@@ -101,7 +101,7 @@ class StepInputConfig:
     def __init__(
         self,
         id_: str,
-        source: str,
+        source: str | None = None,
         scatter: bool = False,
         value_from: str | None = None,
         default: str | None = None,
@@ -118,7 +118,7 @@ class StepInputConfig:
     def from_dict(d: dict[str, Any]):
         return StepInputConfig(
             id_=d["id"],
-            source=d["source"],
+            source=d.get("source"),
             scatter=d.get("scatter", False),
             value_from=d.get("value_from"),
             default=d.get("default"),

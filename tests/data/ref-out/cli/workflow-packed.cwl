@@ -1,14 +1,14 @@
 $graph:
 - class: CommandLineTool
-  id: '#get_urls'
+  id: get_urls
   inputs:
-  - id: '#get_urls/catalog'
+  - id: catalog
     inputBinding:
       prefix: --catalog
     type:
     - 'null'
     - string
-  - id: '#get_urls/collection'
+  - id: collection
     inputBinding:
       prefix: --collection
     type:
@@ -26,7 +26,7 @@ $graph:
   - python
   - /app/app.py
   outputs:
-  - id: '#get_urls/ids'
+  - id: ids
     outputBinding:
       glob: ids.txt
       loadContents: true
@@ -34,7 +34,7 @@ $graph:
     type:
       items: string
       type: array
-  - id: '#get_urls/urls'
+  - id: urls
     outputBinding:
       glob: urls.txt
       loadContents: true
@@ -43,15 +43,15 @@ $graph:
       items: string
       type: array
 - class: CommandLineTool
-  id: '#make_stac'
+  id: make_stac
   inputs:
-  - id: '#make_stac/files'
+  - id: files
     doc: FILES
     type:
       type: array
       items: File
   outputs:
-  - id: '#make_stac/stac_catalog'
+  - id: stac_catalog
     outputBinding:
       glob: .
     type: Directory
@@ -65,25 +65,25 @@ $graph:
   - /app/app.py
 - class: CommandLineTool
   inputs:
-  - id: '#process/url'
+  - id: url
     inputBinding:
       position: 1
       prefix: /vsicurl/
       separate: false
     type: string
-  - id: '#process/id'
+  - id: id
     inputBinding:
       position: 2
       separate: false
       valueFrom: $(self + "_resized.tif")
     type: string
-  - id: '#process/outsize_x'
+  - id: outsize_x
     inputBinding:
       position: 4
       prefix: -outsize
       separate: true
     type: string
-  - id: '#process/outsize_y'
+  - id: outsize_y
     inputBinding:
       position: 5
       separate: false
@@ -92,40 +92,40 @@ $graph:
   - type: File
     outputBinding:
       glob: '*.tif'
-    id: '#process/resized'
+    id: resized
   requirements:
   - class: DockerRequirement
     dockerPull: ghcr.io/osgeo/gdal:ubuntu-small-latest
   - class: InlineJavascriptRequirement
   baseCommand: gdal_translate
-  id: '#process'
+  id: process
 - class: Workflow
-  id: '#resize-collection'
+  id: resize-collection
   inputs:
-  - id: '#resize-collection/catalog'
+  - id: catalog
     label: catalog
     doc: full catalog path
     default: supported-datasets/ceda-stac-fastapi
     type: string
-  - id: '#resize-collection/collection'
+  - id: collection
     label: collection id
     doc: collection id
     default: sentinel2_ard
     type: string
-  - id: '#resize-collection/outsize_x'
+  - id: outsize_x
     label: outsize_x
     doc: outsize_x
     default: 5%
     type: string
-  - id: '#resize-collection/outsize_y'
+  - id: outsize_y
     label: outsize_y
     doc: outsize_y
     default: 5%
     type: string
   outputs:
-  - id: '#resize-collection/stac_output'
+  - id: stac_output
     outputSource:
-    - '#resize-collection/make_stac/stac_catalog'
+    - make_stac/stac_catalog
     type: Directory
   requirements:
   - class: ScatterFeatureRequirement
@@ -135,39 +135,39 @@ $graph:
   label: Resize collection cogs
   doc: Resize collection cogs
   steps:
-  - id: '#resize-collection/get_urls'
+  - id: get_urls
     in:
-    - id: '#resize-collection/get_urls/catalog'
-      source: '#resize-collection/catalog'
-    - id: '#resize-collection/get_urls/collection'
-      source: '#resize-collection/collection'
+    - id: catalog
+      source: catalog
+    - id: collection
+      source: collection
     out:
-    - id: '#resize-collection/get_urls/urls'
-    - id: '#resize-collection/get_urls/ids'
+    - id: urls
+    - id: ids
     run: '#get_urls'
-  - id: '#resize-collection/process'
+  - id: process
     in:
-    - id: '#resize-collection/process/outsize_x'
-      source: '#resize-collection/outsize_x'
-    - id: '#resize-collection/process/outsize_y'
-      source: '#resize-collection/outsize_y'
-    - id: '#resize-collection/process/url'
-      source: '#resize-collection/get_urls/urls'
-    - id: '#resize-collection/process/id'
-      source: '#resize-collection/get_urls/ids'
+    - id: outsize_x
+      source: outsize_x
+    - id: outsize_y
+      source: outsize_y
+    - id: url
+      source: get_urls/urls
+    - id: id
+      source: get_urls/ids
       valueFrom: $(self + "_resized.tif")
     out:
-    - id: '#resize-collection/process/resized'
+    - id: resized
     run: '#process'
     scatter:
-    - '#resize-collection/process/url'
-    - '#resize-collection/process/id'
+    - url
+    - id
     scatterMethod: dotproduct
-  - id: '#resize-collection/make_stac'
+  - id: make_stac
     in:
-    - id: '#resize-collection/make_stac/files'
-      source: '#resize-collection/process/resized'
+    - id: files
+      source: process/resized
     out:
-    - id: '#resize-collection/make_stac/stac_catalog'
+    - id: stac_catalog
     run: '#make_stac'
 cwlVersion: v1.0

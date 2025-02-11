@@ -4,6 +4,7 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
+from typing import Any
 
 from cwl_utils.parser import load_document_by_uri, save
 from cwl_utils.parser.cwl_v1_0 import (
@@ -184,26 +185,49 @@ def pack_workflow(wf_path: Path) -> Path:
     return packed_path
 
 
-def cleanup_packed_workflow(packed_path: Path, wf_id: str):
-    res = subprocess.run(
-        f"sed -i 's/\\([^ ]*\\)\\.cwl/\\1/g' {packed_path}",
-        shell=True,
-        executable="/bin/bash",
-    )
-    if res.returncode != 0:
-        print("Command stdout: ", res.stdout)
-        print("Command stderr: ", res.stderr)
-        raise RuntimeError("Failed cleaning up packed workflow.")
+def cleanup_packed_workflow(packed_path: Path, wf_id: str) -> None:
+    with open(packed_path) as f:
+        workflow_data = yaml.load(f)
 
-    res = subprocess.run(
-        f"sed -i 's/#main/#{wf_id}/g' {packed_path}",
-        shell=True,
-        executable="/bin/bash",
-    )
-    if res.returncode != 0:
-        print("Command stdout: ", res.stdout)
-        print("Command stderr: ", res.stderr)
-        raise RuntimeError("Failed cleaning up packed workflow.")
+    def clean_id(id_str: str) -> str:
+        return id_str.split("/")[-1].lstrip("#").replace(".cwl", "")
+
+    def clean_source(source: str) -> str:
+        return source.split("/", maxsplit=1)[-1].lstrip("#").replace(".cwl", "")
+
+    def clean_node(node: Any) -> None:
+        if isinstance(node, dict):
+            if "id" in node:
+                node["id"] = clean_id(node["id"])
+
+            if node.get("id") == "main":
+                node["id"] = wf_id
+
+            if "run" in node:
+                node["run"] = node["run"].replace(".cwl", "")
+
+            if "scatter" in node:
+                node["scatter"] = [clean_id(i) for i in node["scatter"]]
+
+            for field in ["source", "outputSource"]:
+                if field in node:
+                    if isinstance(node[field], list):
+                        node[field] = [clean_source(src) for src in node[field]]
+                    else:
+                        node[field] = clean_source(node[field])
+
+            # Recursively process all values
+            for value in node.values():
+                clean_node(value)
+
+        elif isinstance(node, list):
+            for item in node:
+                clean_node(item)
+
+    clean_node(workflow_data)
+
+    with open(packed_path, "w") as f:
+        yaml.dump(workflow_data, f)
 
 
 def validate_workflow(wf_path: Path) -> bool:

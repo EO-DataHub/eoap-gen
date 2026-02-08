@@ -4,7 +4,6 @@ import re
 import shutil
 import subprocess
 from pathlib import Path
-from typing import Any
 
 from cwl_utils.parser import load_document_by_uri, save
 from cwl_utils.parser.cwl_v1_0 import (
@@ -28,11 +27,13 @@ def generate_cwl_cli(
     output_dir: Path,
     step_id: str,
     venv: str | None = None,
-    requirements: list[str] = [],
+    requirements: list[str] | None = None,
     cwl_outputs_path: Path | None = None,
     conda_pkgs: list[str] | None = None,
     python_version: str | None = None,
-):
+) -> None:
+    if requirements is None:
+        requirements = []
     if not venv:
         venv = f"{step_id}-venv"
 
@@ -89,7 +90,7 @@ def generate_docker_cli(step: StepConfig, output_dir: Path) -> None:
                 inputBinding=CommandLineBinding(
                     position=i,
                     prefix=prefix or next_prefix,
-                    separate=True if next_prefix and not prefix else False,
+                    separate=bool(next_prefix and not prefix),
                     valueFrom=inp_config.value_from,
                 ),
             )
@@ -101,6 +102,7 @@ def generate_docker_cli(step: StepConfig, output_dir: Path) -> None:
             next_prefix = part
 
     tool_obj = CommandLineTool(
+        id="",
         baseCommand=command_parts[0],
         requirements=[
             DockerRequirement(dockerPull=step.docker_image),
@@ -113,10 +115,10 @@ def generate_docker_cli(step: StepConfig, output_dir: Path) -> None:
 
     tool_dict = save(tool_obj)
     with open(output_dir / f"{step.id_}.cwl", "w") as f:
-        yaml.dump(tool_dict, f)
+        (yaml.dump(tool_dict, f),)
 
 
-def write_cwl_cli_outputs(path: Path, outputs: list[StepOutputConfig]):
+def write_cwl_cli_outputs(path: Path, outputs: list[StepOutputConfig]) -> None:
     raw = {"outputs": {}}
     for o in outputs:
         raw["outputs"][o.id_] = o.params
@@ -124,7 +126,7 @@ def write_cwl_cli_outputs(path: Path, outputs: list[StepOutputConfig]):
         yaml.dump(raw, f)
 
 
-def modify_cwl_cli(cwl_path: Path, docker_url: str, step: StepConfig):
+def modify_cwl_cli(cwl_path: Path, docker_url: str, step: StepConfig) -> None:
     new_path = cwl_path.with_stem(step.id_)
     os.rename(cwl_path, new_path)
     tool_obj: CommandLineTool = load_document_by_uri(new_path)
@@ -147,9 +149,7 @@ def modify_cwl_cli(cwl_path: Path, docker_url: str, step: StepConfig):
 
     for inp in step.inputs:
         if inp.type_:
-            inp_config = next(
-                (i for i in tool_obj.inputs if f"#{inp.id_}" in i.id), None
-            )
+            inp_config = next((i for i in tool_obj.inputs if f"#{inp.id_}" in i.id), None)
             if not inp_config:
                 raise ValueError(f"Step {step.id_} has no input {inp.id_}.")
             inp_config.type_ = inp.type_
@@ -160,7 +160,7 @@ def modify_cwl_cli(cwl_path: Path, docker_url: str, step: StepConfig):
         yaml.dump(tool_dict, f)
 
 
-def generate_workflow(config: WorkflowConfig, wf_path: Path):
+def generate_workflow(config: WorkflowConfig, wf_path: Path) -> None:
     wf = config.to_cwl()
     with open(wf_path.resolve(), "w") as f:
         yaml.dump(save(wf, relative_uris=False), f)
@@ -190,12 +190,12 @@ def cleanup_packed_workflow(packed_path: Path, wf_id: str) -> None:
         workflow_data = yaml.load(f)
 
     def clean_id(id_str: str) -> str:
-        return id_str.split("/")[-1].lstrip("#").replace(".cwl", "")
+        return id_str.rsplit("/", maxsplit=1)[-1].lstrip("#").replace(".cwl", "")
 
     def clean_source(source: str) -> str:
         return source.split("/", maxsplit=1)[-1].lstrip("#").replace(".cwl", "")
 
-    def clean_node(node: Any) -> None:
+    def clean_node(node: object) -> None:
         if isinstance(node, dict):
             if "id" in node:
                 node["id"] = clean_id(node["id"])

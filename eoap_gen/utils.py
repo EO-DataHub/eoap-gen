@@ -5,13 +5,13 @@ from pathlib import Path
 from eoap_gen.config import WorkflowConfig
 
 
-def create_output_dirs(output_path: Path, steps: list[str]):
+def create_output_dirs(output_path: Path, steps: list[str]) -> None:
     os.makedirs(output_path / "cli", exist_ok=True)
     for s in steps:
         os.makedirs(output_path / "cli" / s, exist_ok=True)
 
 
-def write_action_output(config: WorkflowConfig):
+def write_action_output(config: WorkflowConfig) -> None:
     gh_output = os.getenv("GITHUB_OUTPUT")
     if not gh_output:
         return

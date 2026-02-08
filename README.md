@@ -156,16 +156,22 @@ eoap-gen generate \
 
 # Development
 
-[Install poetry](https://python-poetry.org/docs/#installation)
+[Install uv](https://docs.astral.sh/uv/getting-started/installation/)
 
 Install package deps:
 
 ```
-make install
+make setup
 ```
 
 Run QA checks:
 
 ```
 make check
+```
+
+Run tests:
+
+```
+make test
 ```

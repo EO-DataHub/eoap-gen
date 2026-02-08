@@ -1,16 +1,18 @@
 $graph:
-- class: CommandLineTool
-  id: get_urls
+- id: get_urls
+  class: CommandLineTool
   inputs:
   - id: catalog
     inputBinding:
       prefix: --catalog
+    default: Sentinel.UNSET
     type:
     - 'null'
     - string
   - id: collection
     inputBinding:
       prefix: --collection
+    default: Sentinel.UNSET
     type:
     - 'null'
     - string
@@ -26,14 +28,6 @@ $graph:
   - python
   - /app/app.py
   outputs:
-  - id: ids
-    outputBinding:
-      glob: ids.txt
-      loadContents: true
-      outputEval: $(self[0].contents.split('\n'))
-    type:
-      items: string
-      type: array
   - id: urls
     outputBinding:
       glob: urls.txt
@@ -42,11 +36,20 @@ $graph:
     type:
       items: string
       type: array
-- class: CommandLineTool
-  id: make_stac
+  - id: ids
+    outputBinding:
+      glob: ids.txt
+      loadContents: true
+      outputEval: $(self[0].contents.split('\n'))
+    type:
+      items: string
+      type: array
+- id: make_stac
+  class: CommandLineTool
   inputs:
   - id: files
     doc: FILES
+    default: Sentinel.UNSET
     type:
       type: array
       items: File
@@ -63,7 +66,8 @@ $graph:
   baseCommand:
   - python
   - /app/app.py
-- class: CommandLineTool
+- id: process
+  class: CommandLineTool
   inputs:
   - id: url
     inputBinding:
@@ -98,9 +102,8 @@ $graph:
     dockerPull: ghcr.io/osgeo/gdal:ubuntu-small-latest
   - class: InlineJavascriptRequirement
   baseCommand: gdal_translate
-  id: process
-- class: Workflow
-  id: resize-collection
+- id: resize-collection
+  class: Workflow
   inputs:
   - id: catalog
     label: catalog

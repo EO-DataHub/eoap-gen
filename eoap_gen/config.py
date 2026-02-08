@@ -37,7 +37,7 @@ class WorkflowInputConfig:
         self.default = default
 
     @staticmethod
-    def from_dict(d: dict[str, Any]):
+    def from_dict(d: dict[str, Any]) -> "WorkflowInputConfig":
         return WorkflowInputConfig(
             id_=d["id"],
             type_=d.get("type"),
@@ -46,7 +46,7 @@ class WorkflowInputConfig:
             default=d.get("default"),
         )
 
-    def to_cwl(self):
+    def to_cwl(self) -> InputParameter:
         return InputParameter(
             id=self.id_,
             label=self.label,
@@ -75,14 +75,14 @@ class WorkflowOutputConfig:
             self.source = [source]
 
     @staticmethod
-    def from_dict(d: dict[str, Any]):
+    def from_dict(d: dict[str, Any]) -> "WorkflowOutputConfig":
         return WorkflowOutputConfig(
             id_=d["id"],
             type_=d.get("type"),
             source=d["source"],
         )
 
-    def to_cwl(self):
+    def to_cwl(self) -> WorkflowOutputParameter:
         return WorkflowOutputParameter(
             id=self.id_,
             outputSource=self.source,
@@ -115,7 +115,7 @@ class StepInputConfig:
         self.type_ = type_
 
     @staticmethod
-    def from_dict(d: dict[str, Any]):
+    def from_dict(d: dict[str, Any]) -> "StepInputConfig":
         return StepInputConfig(
             id_=d["id"],
             source=d.get("source"),
@@ -125,7 +125,7 @@ class StepInputConfig:
             type_=d.get("type"),
         )
 
-    def to_cwl(self):
+    def to_cwl(self) -> WorkflowStepInput:
         return WorkflowStepInput(
             id=self.id_,
             source=self.source,
@@ -143,14 +143,14 @@ class StepOutputConfig:
         self.params = params
 
     @staticmethod
-    def from_dict(d: dict[str, Any]):
+    def from_dict(d: dict[str, Any]) -> "StepOutputConfig":
         params = {k: v for k, v in d.items() if k != "id"}
         return StepOutputConfig(
             id_=d["id"],
             params=params,
         )
 
-    def to_cwl(self):
+    def to_cwl(self) -> WorkflowStepOutput:
         return WorkflowStepOutput(id=self.id_)
 
 
@@ -166,20 +166,16 @@ class StepConfig:
     scatter_ids: list[str] | None
     scatter_method: str | None
     run: Path
-    conda: (
-        list[str] | None
-    )  # if generating from py script, and should create a conda env
-    python_version: (
-        str | None
-    )  # if generating from py script, and should create a conda env
+    conda: list[str] | None  # if generating from py script, and should create a conda env
+    python_version: str | None  # if generating from py script, and should create a conda env
 
     def __init__(
         self,
         id_: str,
         inputs: list[StepInputConfig],
         outputs: list[StepOutputConfig],
-        script: os.PathLike | None = None,
-        requirements: os.PathLike | None = None,
+        script: os.PathLike[str] | None = None,
+        requirements: os.PathLike[str] | None = None,
         apt_install: list[str] | None = None,
         docker_image: str | None = None,
         command: str | None = None,
@@ -205,7 +201,7 @@ class StepConfig:
         self.python_version = python_version
 
     @staticmethod
-    def from_dict(d: dict[str, Any]):
+    def from_dict(d: dict[str, Any]) -> "StepConfig":
         inputs_raw = d.get("inputs")
         inputs = []
         scatter_ids = None
@@ -232,7 +228,7 @@ class StepConfig:
             python_version=d.get("python_version"),
         )
 
-    def to_cwl(self):
+    def to_cwl(self) -> WorkflowStep:
         return WorkflowStep(
             id=self.id_,
             run=str(self.run.resolve()),
@@ -280,7 +276,7 @@ class WorkflowConfig:
         self.cores_max = cores_max
 
     @staticmethod
-    def from_dict(d: dict[str, Any]):
+    def from_dict(d: dict[str, Any]) -> "WorkflowConfig":
         inputs_raw = d.get("inputs")
         inputs = []
         if inputs_raw:
@@ -304,17 +300,17 @@ class WorkflowConfig:
         )
 
     @staticmethod
-    def load_config(path: os.PathLike):
+    def load_config(path: os.PathLike[str]) -> "WorkflowConfig":
         yaml = YAML()
         yaml.default_flow_style = False
         raw = yaml.load(Path(path))
         return WorkflowConfig.from_dict(raw)
 
-    def set_step_run(self, cli_dir: Path):
+    def set_step_run(self, cli_dir: Path) -> None:
         for step in self.steps:
             step.run = cli_dir / step.id_ / f"{step.id_}.cwl"
 
-    def to_cwl(self):
+    def to_cwl(self) -> Workflow:
         additional_requirements = []
         if self.ram_min or self.ram_max or self.cores_min or self.cores_max:
             additional_requirements.append(

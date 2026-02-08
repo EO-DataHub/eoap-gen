@@ -8,7 +8,7 @@ from eoap_gen.template import get_template
 def get_requirements(path: Path | None) -> list[str]:
     if not path:
         return []
-    with open(path, "r") as f:
+    with open(path) as f:
         lines = f.read().splitlines()
     return lines
 
@@ -43,11 +43,9 @@ def save_dockerfile(
         f.write(dockerfile_content.strip())
 
 
-def generate_dockerfile(step: StepConfig, save_dir: Path):
+def generate_dockerfile(step: StepConfig, save_dir: Path) -> None:
     reqs = get_requirements(step.requirements)
     if not step.script:
         raise ValueError(f"Step {step.id_} has no script.")
-    content = get_dockerfile_content(
-        step.script, reqs, step.apt_install, step.conda, step.python_version or "3.12"
-    )
+    content = get_dockerfile_content(step.script, reqs, step.apt_install, step.conda, step.python_version or "3.12")
     save_dockerfile(save_dir, step.script, step.id_, content)

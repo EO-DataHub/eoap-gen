@@ -19,7 +19,7 @@ from eoap_gen.utils import create_output_dirs, write_action_output
 
 
 @click.group()
-def cli():
+def cli() -> None:
     pass
 
 
@@ -47,14 +47,9 @@ def cli():
 @click.option(
     "--docker-tag",
     required=True,
-    help=(
-        "Docker image tag, to be used by CWL to pull generated CommandLineTools, e.g. "
-        "`main`"
-    ),
+    help=("Docker image tag, to be used by CWL to pull generated CommandLineTools, e.g. `main`"),
 )
-def generate(
-    config_path: Path, output_path: Path, docker_url_base: str, docker_tag: str
-):
+def generate(config_path: Path, output_path: Path, docker_url_base: str, docker_tag: str) -> None:
     config = WorkflowConfig.load_config(config_path)
 
     create_output_dirs(output_path, [s.id_ for s in config.steps])

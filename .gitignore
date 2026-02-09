@@ -165,3 +165,4 @@ playground/
 .cursorrules
 tests/output/
 *-venv/
+.pre-commit-config.yaml

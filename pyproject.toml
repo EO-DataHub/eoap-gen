@@ -1,40 +1,76 @@
-[tool.poetry]
+[project]
 name = "eoap-gen"
 version = "0.0.1"
 description = ""
-authors = ["Dusan Figala <dusan@oxidian.com>"]
+authors = [{ name = "Dusan Figala", email = "dusan@oxidian.com" }]
 readme = "README.md"
-license = "BSD-3-Clause"
+license = { text = "BSD-3-Clause" }
+requires-python = ">=3.13,<3.14"
+classifiers = [
+    "Programming Language :: Python :: 3.13",
+]
+dependencies = [
+    "click>=8.1.7",
+    "argparse2tool>=0.4.9",
+    "cwl-utils>=0.33",
+    "pyyaml>=6.0.2",
+    "jinja2>=3.1.4",
+    "cwlref-runner>=1.0",
+]
 
-[tool.poetry.dependencies]
-python = "^3.10,<3.14"
-click = "^8.1.7"
-argparse2tool = "^0.4.9"
-cwl-utils = "^0.33"
-pyyaml = "^6.0.2"
-jinja2 = "^3.1.4"
-cwlref-runner = "^1.0"
-
-[tool.poetry.scripts]
+[project.scripts]
 eoap-gen = "eoap_gen.cli:cli"
 
-[tool.poetry.group.dev.dependencies]
-black = "^24.8.0"
-flake8 = "^7.1.1"
-isort = "^5.13.2"
-pyright = "^1.1.377"
-
-
-[tool.poetry.group.test.dependencies]
-pytest = "^8.3.3"
-pytest-cov = "^5.0.0"
-
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.isort]
-profile = "black"
+[tool.uv]
+package = true
+
+[dependency-groups]
+dev = [
+    "pre-commit",
+    "pyright",
+    "pytest",
+    "pytest-cov>=7.0.0",
+    "pytest-mock",
+    "pytest-watcher",
+    "pytest-xdist",
+    "ruff",
+    "validate-pyproject",
+]
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
 
 [tool.pyright]
 include = ["eoap_gen"]
+
+[tool.ruff]
+line-length = 119
+extend-exclude = ["tests/data"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # Pycodestyle errors
+    "W",    # Pycodestyle warnings
+    "F",    # Pyflakes
+    "I",    # isort
+    "FAST", # FastAPI
+    "RUF",  # RUF-specific rules
+    "SIM",  # Simplifications
+    "B",    # Bugbear
+    "ANN",  # Annotations
+    "PLC",  # Pylint convention
+    "PLE",  # Pylint errors
+    "UP",   # pyupgrade
+    "FURB", # refurb
+    "PT",   # pytest
+]
+ignore = [
+    "E501",   # line too long
+    "SIM108", # ternary operator
+    "SIM103", # return bool directly
+    "B008",   # function call in default argument (incompatible with FastAPI)
+]

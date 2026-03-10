@@ -170,7 +170,8 @@ Run QA checks:
 make check
 ```
 
-Run tests:
+Run tests (requires [micromamba](https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html)
+to be installed):
 
 ```
 make test

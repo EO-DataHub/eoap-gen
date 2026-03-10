@@ -184,15 +184,6 @@ wheels = [
 ]
 
 [[package]]
-name = "cwlref-runner"
-version = "1.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cwltool" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/ba/71/473777c3f190fca0546e9fb9aff38d198bf9e5e3d8af73fb9358c9f72d58/cwlref-runner-1.0.tar.gz", hash = "sha256:a46662940c1e13453c1cb955167ef2223331449c58b026b7f06c905726aad619", size = 1274, upload-time = "2016-07-07T19:27:11.427Z" }
-
-[[package]]
 name = "cwltool"
 version = "3.1.20260108082145"
 source = { registry = "https://pypi.org/simple" }
@@ -235,7 +226,7 @@ dependencies = [
     { name = "argparse2tool" },
     { name = "click" },
     { name = "cwl-utils" },
-    { name = "cwlref-runner" },
+    { name = "cwltool" },
     { name = "jinja2" },
     { name = "pyyaml" },
 ]
@@ -258,7 +249,7 @@ requires-dist = [
     { name = "argparse2tool", specifier = ">=0.4.9" },
     { name = "click", specifier = ">=8.1.7" },
     { name = "cwl-utils", specifier = ">=0.33" },
-    { name = "cwlref-runner", specifier = ">=1.0" },
+    { name = "cwltool" },
     { name = "jinja2", specifier = ">=3.1.4" },
     { name = "pyyaml", specifier = ">=6.0.2" },
 ]
